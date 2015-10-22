@@ -1,4 +1,9 @@
 defmodule MSPP do
+  @moduledoc """
+  Proxy for metasploit-framework payload sessions so you can scale horizontally
+  using one msfconsole.
+  """
+
   use Application
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
