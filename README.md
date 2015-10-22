@@ -1,5 +1,7 @@
 # MSPP
 
+[![Build Status](https://travis-ci.org/limhoff-r7/mspp.svg?branch=master)](https://travis-ci.org/limhoff-r7/mspp)
+
 **TODO: Add description**
 
 ## Installation
