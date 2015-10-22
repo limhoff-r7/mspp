@@ -20,7 +20,7 @@ defmodule MSPP.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger],
+    [applications: [:logger, :ranch],
      mod: {MSPP, []}]
   end
 
@@ -36,7 +36,8 @@ defmodule MSPP.Mixfile do
   defp deps do
     [
       {:dogma, "~> 0.0.10", only: :dev},
-      {:excoveralls, "~> 0.4.0", only: :test}
+      {:excoveralls, "~> 0.4.0", only: :test},
+      {:ranch, "~> 1.1"}
     ]
   end
 end
