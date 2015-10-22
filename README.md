@@ -1,6 +1,7 @@
 # MSPP
 
 [![Build Status](https://travis-ci.org/limhoff-r7/mspp.svg?branch=master)](https://travis-ci.org/limhoff-r7/mspp)
+[![Coverage Status](https://coveralls.io/repos/limhoff-r7/mspp/badge.svg?branch=master&service=github)](https://coveralls.io/github/limhoff-r7/mspp?branch=master)
 
 **TODO: Add description**
 
