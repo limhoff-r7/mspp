@@ -7,7 +7,13 @@ defmodule MSPP.Mixfile do
      elixir: "~> 1.1",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps,
+     preferred_cli_env: [
+       "coveralls": :test,
+       "coveralls.detail": :test,
+       "coveralls.post": :test
+     ],
+     test_coverage: [tool: ExCoveralls]]
   end
 
   # Configuration for the OTP application
@@ -29,7 +35,8 @@ defmodule MSPP.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:dogma, "~> 0.0.10", only: :dev}
+      {:dogma, "~> 0.0.10", only: :dev},
+      {:excoveralls, "~> 0.4.0", only: :test}
     ]
   end
 end
