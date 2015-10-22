@@ -3,3 +3,7 @@
 /deps
 erl_crash.dump
 *.ez
+
+# IntelliJ developer-specific project files
+/.idea/workspace.xml
+/.idea/tasks.xml
