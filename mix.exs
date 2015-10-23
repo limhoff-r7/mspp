@@ -36,6 +36,9 @@ defmodule MSPP.Mixfile do
   defp deps do
     [
       {:dogma, "~> 0.0.10", only: :dev},
+      # optional dependency for ex_doc for Markdown support
+      {:earmark, "~> 0.1.18", only: :dev},
+      {:ex_doc, "~> 0.10.0", only: :dev},
       {:excoveralls, "~> 0.4.0", only: :test},
       {:ranch, "~> 1.1"}
     ]
