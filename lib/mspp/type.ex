@@ -42,6 +42,14 @@ defmodule MSPP.Type do
   def type(:request), do: 0
   def type(:request_id), do: meta(:string) ||| 2
 
+  defmacro type?(type, name) do
+    value = type(name)
+
+    quote do
+      (unquote(type) &&& unquote(value)) == unquote(value)
+    end
+  end
+
   def to_binary(type) when is_integer(type) and
                            type >= 0 and
                            type <= ((1 <<< @bit_size) - 1) do
