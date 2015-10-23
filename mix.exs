@@ -40,6 +40,7 @@ defmodule MSPP.Mixfile do
       {:earmark, "~> 0.1.18", only: :dev},
       {:ex_doc, "~> 0.10.0", only: :dev},
       {:excoveralls, "~> 0.4.0", only: :test},
+      {:inch_ex, "~> 0.4.0", only: :docs},
       {:ranch, "~> 1.1"}
     ]
   end
