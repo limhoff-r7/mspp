@@ -3,6 +3,8 @@ defmodule MSPP.Handler do
   Handles connections to/from payloads
   """
 
+  @behaviour :ranch_protocol
+
   require Logger
 
   # Client Interface
