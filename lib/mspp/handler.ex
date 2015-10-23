@@ -18,13 +18,19 @@ defmodule MSPP.Handler do
     transport.setopts(socket, [nodelay: :true])
     Process.flag(:trap_exit, true)
 
+    transport.send(
+      socket,
+      MSPP.Packet.request("core_machine_id")
+      |> MSPP.Packet.to_binary
+    )
+
     loop(socket, transport)
   end
 
   def loop(socket, transport) do
     case transport.recv(socket, 0, :infinity) do
       {:ok, packet} ->
-        Logger.debug "Received #{inspect packet}"
+        Logger.debug "Received #{inspect packet, limit: byte_size(packet)}"
         loop(socket, transport)
       unknown ->
         Logger.error "Received #{inspect unknown}"
