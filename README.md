@@ -20,3 +20,24 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
         def application do
           [applications: [:mspp]]
         end
+
+## Testing
+
+### With `mettle`
+
+#### Single
+
+1. `iex -S mix`
+2. `mettle -u 127.0.0.1:8005`
+
+#### Load
+
+1. 
+    ```
+    for i in `seq 1 100`
+    do
+      metasploit -u 127.0.0.1:8005 &
+    done
+    ```
+2. Wait for all          
+2. `iex -S mix`
