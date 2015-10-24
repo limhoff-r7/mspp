@@ -8,6 +8,11 @@ defmodule MSPP.LengthTypeValue do
 
   defstruct compress: false, value: nil, type: nil
 
+  @typedoc """
+  * `:compress` - whether to ZLib Deflate the `:value` in `to_binary/1`
+  * `:value` - binary content
+  * `:type` - bit flags that tag `:value`
+  """
   @type t :: %__MODULE__{
                compress: boolean,
                value: binary,
@@ -15,8 +20,8 @@ defmodule MSPP.LengthTypeValue do
              }
 
   @doc """
-  Compresses `uncompressed` binary if flag is `true`.  Returns {type, binary}
-  where type should be `Bitwise.|||/2`ed with original type.
+  Compresses `uncompressed` binary if flag is `true`.  Returns `{type, binary}`
+  where `type` should be `Bitwise.|||/2`ed with original `t.type`.
   """
   @spec compress(binary, boolean) :: {MSPP.Type.t, binary}
 
@@ -43,6 +48,10 @@ defmodule MSPP.LengthTypeValue do
     end
   end
 
+  @doc """
+  Methods act like RPC calls where a response is expected matching the request
+  method.
+  """
   @spec method(String.t) :: t
   def method(method) do
     %__MODULE__{
@@ -51,6 +60,11 @@ defmodule MSPP.LengthTypeValue do
     }
   end
 
+  @doc """
+  Requests require a unique ID that gets returned with their response so the
+  two can be correlated.
+  """
+  @spec request_id :: %__MODULE__{value: String.t}
   def request_id do
     %__MODULE__{
       value: request_id_value,
@@ -58,10 +72,20 @@ defmodule MSPP.LengthTypeValue do
     }
   end
 
+  @doc """
+  Requests IDs by convention from the Ruby implementation in
+  metasploit-framework are random 32-digit decimal integers in a `String.t`
+  """
+  @spec request_id_value :: String.t
   def request_id_value do
     Enum.map_join(1..32, fn _ -> random_digit end)
   end
 
+  @doc """
+  Converts `%MSPP.LengthTypeValue{}` to its on-the-wire representation for
+  sending to the payload.
+  """
+  @spec to_binary(t) :: binary
   def to_binary(%__MODULE__{compress: compress, value: value, type: type}) do
     uncompressed = case MSPP.Type.meta(type) do
       :string ->
@@ -73,6 +97,11 @@ defmodule MSPP.LengthTypeValue do
     to_binary(compression_type ||| type, compressed)
   end
 
+  @doc """
+  Calculates length of `value` and composes that length, the `value`, and the
+  `type` into the on-the-wire representation for sending to the payload.
+  """
+  @spec to_binary(MSPP.Type.t, binary) :: binary
   def to_binary(type, value) when is_integer(type) and
                                   is_binary(value) do
     length = MSPP.Length.byte_size + MSPP.Type.byte_size + byte_size(value)
@@ -82,6 +111,7 @@ defmodule MSPP.LengthTypeValue do
 
   # Private Functions
 
+  @spec random_digit :: String.t
   defp random_digit do
     to_string(:rand.uniform(10) - 1)
   end

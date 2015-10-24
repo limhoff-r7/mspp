@@ -1,9 +1,14 @@
 defmodule MSPP.Packet do
   @moduledoc """
-  Packet sent to or received from a packet.  Composed of one or more TLVs.
+  Packet sent to or received from a payload.
   """
   defstruct [:method, :length_type_values, :type]
 
+  @typedoc """
+  Packet sent to or receive from a payload. Composed of one or more LTV
+  (`lenght_type_value`)s with an `type` that distinguished requests and
+  responses.  The `method` to run.
+  """
   @type t :: %__MODULE__{
                method: String.t,
                length_type_values: [],
@@ -27,7 +32,7 @@ defmodule MSPP.Packet do
   end
 
   @doc """
-  A request packet to send to the payload.
+  A request packet for `method` to send to the payload.
   """
   @spec request(method) :: %__MODULE__{method: method} when method: String.t
   def request(method) do

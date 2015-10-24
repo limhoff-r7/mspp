@@ -9,15 +9,26 @@ defmodule MSPP.Handler do
 
   # Client Interface
 
-  def start_link(ref, socket, transport, opts) do
-    pid = spawn_link(__MODULE__, :init, [ref, socket, transport, opts])
+  @doc """
+  Starts handler for the given `socket` using the given `transport`.  `socket`
+  is accepted (using `:ranch.accept_ack/1`) using `ref`.  `opts` are ignored.
+  """
+  @spec start_link(:ranch.ref, any, module, any) :: {:ok, pid}
+  def start_link(ref, socket, transport, _opts) do
+    pid = spawn_link(__MODULE__, :init, [ref, socket, transport])
 
     {:ok, pid}
   end
 
-  # Private Functions
-
-  def init(ref, socket, transport, _Opts = []) do
+  @doc """
+  1. Accepts the `socket` using `ref`.
+  2. Enable NODELAY.
+  3. Sends a "core_machind_id" request to payload to get
+     `%MSPP.Session.machine_id`
+  4. Enters receive `loop/1`
+  """
+  @spec init(:ranch.ref, any, module) :: no_return
+  def init(ref, socket, transport) do
     :ok = :ranch.accept_ack(ref)
     transport.setopts(socket, [nodelay: :true])
     Process.flag(:trap_exit, true)
@@ -29,6 +40,9 @@ defmodule MSPP.Handler do
     |> loop
   end
 
+  # Private Functions
+
+  @spec loop(MSPP.Session.t) :: no_return
   defp loop(session = %MSPP.Session{socket: socket, transport: transport}) do
     case transport.recv(socket, 0, :infinity) do
       {:ok, packet} ->
@@ -40,6 +54,7 @@ defmodule MSPP.Handler do
     end
   end
 
+  @spec shutdown(any, module) :: :ok
   defp shutdown(socket, transport) do
     :ok = transport.close(socket)
   end
