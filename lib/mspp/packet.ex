@@ -2,7 +2,10 @@ defmodule MSPP.Packet do
   @moduledoc """
   Packet sent to or received from a payload.
   """
-  defstruct [:method, :length_type_values, :type]
+
+  # Types
+
+  defstruct [:length_type_values, :type]
 
   @typedoc """
   Packet sent to or receive from a payload. Composed of one or more LTV
@@ -10,10 +13,46 @@ defmodule MSPP.Packet do
   responses.  The `method` to run.
   """
   @type t :: %__MODULE__{
-               method: String.t,
                length_type_values: [],
                type: integer
              }
+
+  # Functions
+
+  @doc """
+  Parses `buffer` for complete packet.  The part of the buffer that was not
+  consumed by the returned packet is returned as the element of the returned
+  tuple.
+  """
+  @spec parse(binary) :: { t | nil, binary }
+  def parse(buffer) do
+    case MSPP.LengthTypeValue.parse_type_value(buffer) do
+      { { type, value  }, rest } ->
+        {
+          %__MODULE__{
+            type: type,
+            length_type_values: MSPP.LengthTypeValue.parse_all(value)
+          },
+          rest
+        }
+      { nil, buffer } ->
+        { nil, buffer }
+    end
+  end
+
+  @doc """
+  A request packet for `method` to send to the payload.
+  """
+  @spec request(String.t) :: t
+  def request(method) do
+    %__MODULE__{
+      length_type_values: [
+        MSPP.LengthTypeValue.method(method),
+        MSPP.LengthTypeValue.request_id
+      ],
+      type: MSPP.Type.type(:request)
+    }
+  end
 
   @doc """
   Converts the `packet` to binary suitable to sending to the payload
@@ -29,19 +68,5 @@ defmodule MSPP.Packet do
     )
 
     MSPP.LengthTypeValue.to_binary(type, value)
-  end
-
-  @doc """
-  A request packet for `method` to send to the payload.
-  """
-  @spec request(method) :: %__MODULE__{method: method} when method: String.t
-  def request(method) do
-    %__MODULE__{
-      length_type_values: [
-        MSPP.LengthTypeValue.method(method),
-        MSPP.LengthTypeValue.request_id
-      ],
-      type: MSPP.Type.type(:request)
-    }
   end
 end

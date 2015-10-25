@@ -45,18 +45,24 @@ defmodule MSPP.Handler do
   @spec loop(MSPP.Session.t) :: no_return
   defp loop(session = %MSPP.Session{socket: socket, transport: transport}) do
     case transport.recv(socket, 0, :infinity) do
-      { :ok, partial_response } ->
-        new_session = %MSPP.Session{
-                        session |
-                        partial_response: (
-                          session.partial_response <> partial_response
-                        )
-                      }
+      { :ok, partial_response_tail } ->
+        partial_response = session.partial_response <> partial_response_tail
+
+        { packet, new_partial_response } = MSPP.Packet.parse(partial_response)
+
+        if packet do
+          Logger.debug "Parsed: #{inspect packet}"
+        end
+
         Logger.debug(
           "New partial response: " <>
-          inspect(new_session.partial_response,
-                  limit: byte_size(new_session.partial_response))
+          inspect(new_partial_response, limit: byte_size(new_partial_response))
         )
+
+        new_session = %MSPP.Session{
+                        session | partial_response: new_partial_response
+                      }
+
         loop(new_session)
       unknown ->
         Logger.error "Received #{inspect unknown}"

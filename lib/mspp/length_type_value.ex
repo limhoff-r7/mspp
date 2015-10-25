@@ -61,6 +61,59 @@ defmodule MSPP.LengthTypeValue do
   end
 
   @doc """
+  Parses `buffer` for complete LTV.  The returned tuple `{ltv, rest}` has the
+  parsed `t` if `buffer` was long enough or `nil` otherwise.  `rest` is tail of
+  `buffer` not consumed by `tlv`.
+  """
+  @spec parse(binary) :: { t | nil, binary }
+  def parse(buffer) do
+    case parse_type_value(buffer) do
+      { nil, buffer } ->
+        { nil, buffer }
+      { { type, value }, rest } ->
+        {
+          %__MODULE__{ value: value, type: type },
+          rest
+        }
+    end
+  end
+
+  @doc """
+  Parses `buffer` for all LTVs.  `buffer` must not contain any incomplete TLVs.
+  """
+  @spec parse_all(binary) :: [t]
+  def parse_all(buffer) do
+    parse_all(buffer, [])
+  end
+
+  @doc """
+  Parses `bufer` for complete LTV.  The returned tuple `{{type, value}, rest}`
+  has the `type` and `value` of a `t` if the buffer was long enough ot `nil`
+  otherwise.  `rest` is tail of `buffer` not consumed by LTV.
+  """
+  @spec parse_type_value(binary) :: { { MSPP.Type.t, binary } | nil, binary }
+  def parse_type_value(buffer = << length :: big-size(32),
+                                   type_value_rest :: binary >>) do
+    value_length = length - MSPP.Length.byte_size - MSPP.Type.byte_size
+
+    case type_value_rest do
+      << type :: big-size(32),
+         value :: binary-size(value_length),
+         rest :: binary >> ->
+        {
+          { type, value },
+          rest
+        }
+      _ ->
+        { nil, buffer }
+    end
+  end
+
+  def parse_type_value(<< rest :: binary >>) do
+    { nil, rest }
+  end
+
+  @doc """
   Requests require a unique ID that gets returned with their response so the
   two can be correlated.
   """
@@ -110,6 +163,17 @@ defmodule MSPP.LengthTypeValue do
   end
 
   # Private Functions
+
+  defp parse_all(<< buffer :: binary >>, length_type_values) do
+    # NOTE: entire buffer will be parsed after all recursion, so don't list
+    # `{ nil, << rest :: binary >> }` as that is an error
+    case parse(buffer) do
+      { nil, << >> } ->
+        :lists.reverse length_type_values
+      { length_type_value = %__MODULE__{}, << rest :: binary >> } ->
+        parse_all(rest, [ length_type_value | length_type_values ])
+    end
+  end
 
   @spec random_digit :: String.t
   defp random_digit do
