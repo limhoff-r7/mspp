@@ -45,9 +45,19 @@ defmodule MSPP.Handler do
   @spec loop(MSPP.Session.t) :: no_return
   defp loop(session = %MSPP.Session{socket: socket, transport: transport}) do
     case transport.recv(socket, 0, :infinity) do
-      {:ok, packet} ->
-        Logger.debug "Received #{inspect packet, limit: byte_size(packet)}"
-        loop(session)
+      { :ok, partial_response } ->
+        new_session = %MSPP.Session{
+                        session |
+                        partial_response: (
+                          session.partial_response <> partial_response
+                        )
+                      }
+        Logger.debug(
+          "New partial response: " <>
+          inspect(new_session.partial_response,
+                  limit: byte_size(new_session.partial_response))
+        )
+        loop(new_session)
       unknown ->
         Logger.error "Received #{inspect unknown}"
         shutdown(socket, transport)

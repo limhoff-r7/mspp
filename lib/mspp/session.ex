@@ -5,24 +5,35 @@ defmodule MSPP.Session do
 
   require MSPP.Type
 
-  defstruct machine_id: nil, requests: [], socket: nil, transport: nil
+  # Types
+
+  defstruct machine_id: nil,
+            partial_response: <<>>,
+            requests: [],
+            socket: nil,
+            transport: nil
 
   @typedoc """
   State about connected payload session.
 
   * `:machine_id` - machine id as returned from
     `MSPP.Packet.request("core_machine_id")`
+  * `:partial_response` - response being constructed from packets received from
+    payload.
   * `:requests` - requests sent to payload over `:socket` using `:transport`
      that are awaiting a response.
   * `:socket` - ranch listening socket connected to payload.
   * `:transport` - ranch transport Module used to manipulate `:socket`
   """
   @type t :: %__MODULE__{
-               machine_id: String.t,
+               machine_id: String.t | nil,
+               partial_response: binary,
                requests: [MSPP.Packet.t],
                socket: any,
                transport: module
              }
+
+  # Functions
 
   @doc """
   Sends `request` to `session`.
