@@ -5,6 +5,7 @@ defmodule MSPP.LengthTypeValue do
   """
 
   use Bitwise
+  require MSPP.Type
 
   defstruct compress: false, value: nil, type: nil
 
@@ -49,6 +50,25 @@ defmodule MSPP.LengthTypeValue do
   end
 
   @doc """
+  Decompresses `value` if `type` has compressed meta type set.
+
+  Returns `{ compressed, uncompressed_type, decompressed_value }`.
+  """
+  @spec decompress(MSPP.Type.t, binary) :: { boolean, MSPP.Type.t, binary }
+  def decompress(type, value) when MSPP.Type.meta_name?(type, :compressed) do
+    uncompressed_type = type ^^^ MSPP.Type.meta_value(:compressed)
+
+    z_stream = :zlib.open
+    :ok = :zlib.inflateInit(z_stream)
+    decompressed_value = :zlib.inflate(z_stream, value)
+    :zlib.close(z_stream)
+
+    { true, uncompressed_type, decompressed_value }
+  end
+
+  def decompress(type, value), do: { false, type, value }
+
+  @doc """
   Methods act like RPC calls where a response is expected matching the request
   method.
   """
@@ -71,8 +91,12 @@ defmodule MSPP.LengthTypeValue do
       { nil, buffer } ->
         { nil, buffer }
       { { type, value }, rest } ->
+        { compress, uncompressed_type, decompressed_value } = decompress(type,
+                                                                         value)
+        parsed_value = parse(uncompressed_type, decompressed_value)
+
         {
-          %__MODULE__{ value: value, type: type },
+          %__MODULE__{ compress: compress, value: parsed_value, type: type },
           rest
         }
     end
@@ -141,8 +165,6 @@ defmodule MSPP.LengthTypeValue do
   @spec to_binary(t) :: binary
   def to_binary(%__MODULE__{compress: compress, value: value, type: type}) do
     uncompressed = case MSPP.Type.meta_name(type) do
-      :none ->
-        value
       :string ->
         << value :: binary, 0 :: size(8) >>
     end
@@ -165,6 +187,25 @@ defmodule MSPP.LengthTypeValue do
   end
 
   # Private Functions
+
+  @spec parse(MSPP.Type.t, binary) :: binary
+  defp parse(type, c_string) when MSPP.Type.meta_name?(type, :string) do
+    c_string_byte_size = byte_size(c_string)
+
+    if c_string_byte_size > 0 do
+      string_byte_size = c_string_byte_size - 1
+      << string :: binary-size(string_byte_size), 0 >> = c_string
+
+      string
+    else
+      << >>
+    end
+  end
+
+  defp parse(type, << unsigned_integer :: unsigned-integer-size(32) >>)
+       when MSPP.Type.meta_name?(type, :unsigned_integer) do
+    unsigned_integer
+  end
 
   defp parse_all(<< buffer :: binary >>, length_type_values) do
     # NOTE: entire buffer will be parsed after all recursion, so don't list

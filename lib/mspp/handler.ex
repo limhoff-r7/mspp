@@ -51,7 +51,7 @@ defmodule MSPP.Handler do
         { packet, new_partial_response } = MSPP.Packet.parse(partial_response)
 
         if packet do
-          Logger.debug "Parsed: #{inspect packet, safe: false}"
+          Logger.debug "Parsed: #{inspect packet, pretty: true, safe: false}"
         end
 
         Logger.debug(
