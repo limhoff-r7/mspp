@@ -23,15 +23,16 @@ defmodule MSPP.Type do
   # Macros
 
   @doc """
-  Checks if the a `t` `type` has the given `name` as passed to `type/1`.  Can
-  be used in guards.
+  **NOTE: Can be used in guards.**
+
+  Checks if the a `t` `type` has the given `name` as passed to `value/1`.
   """
-  @spec type?(t, atom) :: boolean
-  defmacro type?(type, name) do
-    value = type(name)
+  @spec name?(t, atom) :: boolean
+  defmacro name?(type, name) do
+    name_value = value(name)
 
     quote do
-      (unquote(type) &&& unquote(value)) == unquote(value)
+      (unquote(type) &&& unquote(name_value)) == unquote(name_value)
     end
   end
 
@@ -49,26 +50,31 @@ defmodule MSPP.Type do
   @spec byte_size :: integer
   def byte_size, do: div(@bit_size, @bits_per_byte)
 
+  @meta_value_by_name %{
+    compressed: 1 <<< 29,
+    string: 1 <<< 16
+  }
+
   @doc """
   Meta type includes whether the value is compressed with ZLib Deflate
   (`:compressed`) and the format, such as `String.t` (`:string`).
   """
-  @spec meta(atom) :: t
-  def meta(:compressed), do: 1 <<< 29
-  def meta(:string), do: 1 <<< 16
+  @spec meta_value(atom) :: t
+
+  for { name, value } <- @meta_value_by_name do
+    def meta_value(unquote(name)), do: unquote(value)
+  end
 
   @doc """
-  Extracts the format metatype from the `type`.
+  Name of meta type (upper 16-bits of type).
   """
-  @spec meta(integer) :: :string | nil
-  def meta(type) when is_integer(type) do
-    Enum.find(
-      [:string],
-      fn (meta_name) ->
-        meta_type = meta(meta_name)
-        (type &&& meta_type) == meta_type
-      end
-    )
+  @spec meta_name(t) :: atom
+
+  for { name, value } <- @meta_value_by_name do
+    def meta_name(type) when is_integer(type) and
+                             (type &&& unquote(value)) == unquote(value) do
+      unquote(name)
+    end
   end
 
   def to_binary(type) when is_integer(type) and
@@ -78,10 +84,9 @@ defmodule MSPP.Type do
   end
 
   @doc """
-  Type includes whether a `MSPP.Packet` is a request (`:request`) or a response
-  and also the subsection types, such a `:method` or `:request_id`.
+  The `t` value for the given `name`.
   """
-  @spec type(name) :: t when name: atom
-  def type(:method), do: meta(:string) ||| 1
-  def type(:request_id), do: meta(:string) ||| 2
+  @spec value(name) :: t when name: atom
+  def value(:method), do: meta_value(:string) ||| 1
+  def value(:request_id), do: meta_value(:string) ||| 2
 end

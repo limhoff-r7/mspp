@@ -56,7 +56,7 @@ defmodule MSPP.LengthTypeValue do
   def method(method) do
     %__MODULE__{
       value: method,
-      type: MSPP.Type.type(:method)
+      type: MSPP.Type.value(:method)
     }
   end
 
@@ -121,7 +121,7 @@ defmodule MSPP.LengthTypeValue do
   def request_id do
     %__MODULE__{
       value: request_id_value,
-      type: MSPP.Type.type(:request_id)
+      type: MSPP.Type.value(:request_id)
     }
   end
 
@@ -140,7 +140,7 @@ defmodule MSPP.LengthTypeValue do
   """
   @spec to_binary(t) :: binary
   def to_binary(%__MODULE__{compress: compress, value: value, type: type}) do
-    uncompressed = case MSPP.Type.meta(type) do
+    uncompressed = case MSPP.Type.meta_name(type) do
       :string ->
         << value :: binary, 0 :: size(8) >>
     end

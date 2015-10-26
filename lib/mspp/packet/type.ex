@@ -42,6 +42,7 @@ defmodule MSPP.Packet.Type do
   @doc """
   Type value for the given `name`
   """
+  @spec value(atom) :: integer
   def value(:request), do: 0
   def value(:response), do: 1
 end
