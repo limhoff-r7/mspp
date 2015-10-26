@@ -50,7 +50,7 @@ defmodule MSPP.Packet do
         MSPP.LengthTypeValue.method(method),
         MSPP.LengthTypeValue.request_id
       ],
-      type: MSPP.Type.type(:request)
+      type: MSPP.Packet.Type.value(:request)
     }
   end
 
@@ -112,8 +112,8 @@ defmodule MSPP.Packet do
       Inspect.Algebra.concat(
         key_to_binary(key) <> ": ",
         Inspect.Algebra.surround(
-          "MSPP.Type.type(",
-          type |> MSPP.Type.name |> inspect,
+          "MSPP.Packet.Type.value(",
+          type |> MSPP.Packet.Type.name |> inspect,
           ")"
         )
       )

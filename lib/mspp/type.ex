@@ -71,13 +71,6 @@ defmodule MSPP.Type do
     )
   end
 
-  @doc """
-  Name passed to `type/1` to get `type`.
-  """
-  @spec name(integer) :: atom
-  def name(0), do: :request
-  def name(1), do: :response
-
   def to_binary(type) when is_integer(type) and
                            type >= 0 and
                            type <= ((1 <<< @bit_size) - 1) do
@@ -90,7 +83,5 @@ defmodule MSPP.Type do
   """
   @spec type(name) :: t when name: atom
   def type(:method), do: meta(:string) ||| 1
-  def type(:request), do: 0
   def type(:request_id), do: meta(:string) ||| 2
-  def type(:response), do: 1
 end
