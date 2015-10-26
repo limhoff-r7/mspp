@@ -51,8 +51,10 @@ defmodule MSPP.Type do
   def byte_size, do: div(@bit_size, @bits_per_byte)
 
   @meta_value_by_name %{
-    compressed: 1 <<< 29,
-    string: 1 <<< 16
+    compressed:       1 <<< 29,
+    none:                    0,
+    string:           1 <<< 16,
+    unsigned_integer: 1 <<< 17
   }
 
   @doc """
@@ -77,6 +79,17 @@ defmodule MSPP.Type do
     end
   end
 
+  @value_by_name %{
+    any:        @meta_value_by_name.none             ||| 0,
+    method:     @meta_value_by_name.string           ||| 1,
+    request_id: @meta_value_by_name.string           ||| 2,
+    result:     @meta_value_by_name.unsigned_integer ||| 4
+  }
+
+  for { name, value } <- @value_by_name do
+    def name(unquote(value)), do: unquote(name)
+  end
+
   def to_binary(type) when is_integer(type) and
                            type >= 0 and
                            type <= ((1 <<< @bit_size) - 1) do
@@ -87,6 +100,8 @@ defmodule MSPP.Type do
   The `t` value for the given `name`.
   """
   @spec value(name) :: t when name: atom
-  def value(:method), do: meta_value(:string) ||| 1
-  def value(:request_id), do: meta_value(:string) ||| 2
+
+  for { name, value } <- @value_by_name do
+    def value(unquote(name)), do: unquote(value)
+  end
 end

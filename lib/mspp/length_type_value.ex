@@ -141,6 +141,8 @@ defmodule MSPP.LengthTypeValue do
   @spec to_binary(t) :: binary
   def to_binary(%__MODULE__{compress: compress, value: value, type: type}) do
     uncompressed = case MSPP.Type.meta_name(type) do
+      :none ->
+        value
       :string ->
         << value :: binary, 0 :: size(8) >>
     end
@@ -178,5 +180,56 @@ defmodule MSPP.LengthTypeValue do
   @spec random_digit :: String.t
   defp random_digit do
     to_string(:rand.uniform(10) - 1)
+  end
+
+  # Implementations
+
+  defimpl Inspect do
+    def inspect(packet, opts) do
+      Inspect.Algebra.nest inspect(packet, packet.__struct__, opts), 1
+    end
+
+    # Private
+
+    defp inspect(%MSPP.LengthTypeValue{type: type, value: value},
+                 name,
+                 opts) do
+      Inspect.Algebra.surround_many(
+        "%" <> Inspect.Atom.inspect(name, opts) <> "{",
+        [
+          type: type,
+          value: value
+        ],
+        "}",
+        opts,
+        &to_keyword_list/2
+      )
+    end
+
+    defp key_to_binary(key) do
+      case Inspect.Atom.inspect(key) do
+        ":" <> right -> right
+        other -> other
+      end
+    end
+
+    defp to_keyword_list({ key = :type, type }, _opts) do
+      Inspect.Algebra.concat(
+        key_to_binary(key) <> ": ",
+        Inspect.Algebra.surround(
+          "MSPP.Type.value(",
+          type |> MSPP.Type.name |> inspect,
+          ")"
+        )
+      )
+    end
+
+    defp to_keyword_list({ key = :value, length_type_values },
+                         opts) do
+      Inspect.Algebra.concat(
+        key_to_binary(key) <> ": ",
+        Inspect.Algebra.to_doc(length_type_values, opts)
+      )
+    end
   end
 end
