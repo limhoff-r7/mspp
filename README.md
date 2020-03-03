@@ -12,15 +12,19 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
   1. Add mspp to your list of dependencies in `mix.exs`:
 
-        def deps do
-          [{:mspp, "~> 0.0.1"}]
-        end
+```elixir
+def deps do
+  [{:mspp, "~> 0.0.1"}]
+end
+```
 
   2. Ensure mspp is started before your application:
 
-        def application do
-          [applications: [:mspp]]
-        end
+```elixir
+def application do
+  [applications: [:mspp]]
+end
+```
 
 ## Testing
 
